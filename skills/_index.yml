@@ -1,0 +1,96 @@
+generated: '2026-08-27'
+method: searched
+source: >-
+  https://cli.simetrik.com/cli/v1.3.8/simetrik-skill.tar.gz - the provider's own published Claude
+  Agent Skill bundle, referenced by channels.stable.skill in
+  https://cli.simetrik.com/cli/manifest.json and downloaded automatically by Simetrik's shell
+  installer when it detects Claude Code on the machine. Fetched 2026-08-27, HTTP 200,
+  sha256 5c0bdf02e3fbdf12b7e6f0f2580049ebcfe75c65a8d2be7ccb999e8b18e93372 - matching the digest
+  published in the manifest.
+provenance: >-
+  NOTHING HERE WAS AUTHORED BY API EVANGELIST. This is a provider-published Agent Skill captured
+  verbatim, not a skill generated from a spec. Simetrik versions it in lockstep with the CLI and
+  ships it as a first-class release artifact.
+skills:
+- name: simetrik-cli
+  file: simetrik-cli-operator.md
+  skill_version: 1.3.21
+  cli_version: 1.3.8
+  schema_version: '1'
+  install_path: ~/.claude/skills/simetrik/
+  install_command: simetrik skill install
+  bundle_sha256: 5c0bdf02e3fbdf12b7e6f0f2580049ebcfe75c65a8d2be7ccb999e8b18e93372
+  bundle_size_bytes: 188020
+  upstream_source: https://github.com/simetrik-inc/simetrik-cli/tree/main/skill
+  upstream_source_status: >-
+    404 as of 2026-08-27 - the repository named in the bundle's own metadata.json is private or
+    renamed. The GitHub org simetrik-inc is public (3 repos, all infrastructure modules) but does not
+    contain simetrik-cli. Recorded as a broken self-reference in the provider's artifact, not
+    substituted with a guess.
+  description: >-
+    Operate the Simetrik CLI end-to-end. Covers BUILDING reconciliation resources - native sources,
+    segments, calculated columns, unions, joins, groups, legacy and advanced reconciliations, sweeps,
+    compensations, consolidations, opening records and data exports - from a JSON definition file or a
+    Markdown implementation plan, and OPERATING them once built: manual reconciliation and
+    compensation, unreconciliation, decompensation, runs and reprocessing, async job tracking,
+    schedules, alarms, approvals and snapshots. Also covers the Accounting Translator, the Operation
+    Center (dataset, dashboard), row-level reads with `data query`, and the pre-query reads
+    (`data profile`, `data aggregate`) used to validate results without inferring from a page.
+  triggers_bilingual: true
+  triggers_note: >-
+    The skill's own trigger list is deliberately bilingual English/Spanish - "crear fuente",
+    "conciliacion manual", "compensar registros", "desconciliar", "descompensar", "cuantos registros"
+    alongside their English equivalents - which matches Simetrik's LatAm-first customer base.
+  critical_rules:
+  - Stop on any error; do not execute the next command, and do not invent alternative payloads to
+    bypass a 4xx/5xx.
+  - '`--wait` does not always wait: on `recon run`, `recon confirm`, `adv-recon confirm` and
+    `adv-recon execute` it returns instantly with exit 0 without waiting.'
+  - A `--wait` timeout is not a failure - the job keeps running; poll `task status <EVENT_ID>` rather
+    than re-dispatching.
+  - Use `--format json` on every create command.
+  - Pass `-y/--yes` on every destructive command in a non-interactive run.
+  - A `list` result is a page, not the whole set - `resource list` returns at most 50 rows by default
+    (max 200) and a partial page carries a `warnings` field saying so.
+  references_included: false
+  references_note: >-
+    The bundle also ships 35 topic reference files under references/ (548 KB) documenting cross-command
+    wire shapes, async semantics, dependency ordering and API validation rules. They are listed below
+    for the record and are re-fetchable verbatim from the bundle URL above; only SKILL.md and
+    metadata.json are stored in this repo, to keep it to the entry point the skill actually loads.
+  references:
+  - account.md
+  - accounting-automation.md
+  - accounting-entry.md
+  - accounting-integrations.md
+  - accounting.md
+  - advanced-recon.md
+  - calculated-columns.md
+  - consolidations.md
+  - dashboard.md
+  - data-cells.md
+  - data-export.md
+  - data-query.md
+  - dataset.md
+  - decompensation.md
+  - error-handling.md
+  - file-uploads.md
+  - filter-operators.md
+  - folders.md
+  - internal/marketplace-templates.md
+  - internal/smart-rules.md
+  - json-schema-reference.md
+  - legacy-recon.md
+  - manual-reconciliation.md
+  - monitoring.md
+  - opening-records.md
+  - operations.md
+  - pre-query.md
+  - resource-dependencies.md
+  - resource-joins.md
+  - scheduling.md
+  - segments.md
+  - source-groups.md
+  - unions.md
+  - unreconciliation.md
+  - workspace.md

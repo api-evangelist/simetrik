@@ -1,0 +1,132 @@
+# Docs
+
+- CLI
+  - [Introduction](/cli)
+  - Getting started
+    - [Installation](/cli/getting-started/installation)
+    - First use · login
+      - [First use · login](/cli/getting-started/login)
+      - [Enable a role for CLI use](/cli/getting-started/login/enable-cli-role)
+    - [Quickstart](/cli/getting-started/quickstart)
+  - AI agents
+    - [AI agents](/cli/agents): Operate Simetrik by talking to an AI agent — no commands to memorize, no IDs to look up.
+    - [Get started](/cli/agents/get-started): Two ways to start — from scratch, or by pasting a prompt to an agent you already use.
+    - [Prompts to copy](/cli/agents/prompts): Ready-to-paste prompts for installing and for everyday reconciliation work.
+    - [Conversation ideas](/cli/agents/conversation-ideas): Real end-to-end flows, already running in production.
+    - [What your agent can and can't do](/cli/agents/capabilities): The full range of operations your agent can run — and the guardrails that keep it safe.
+  - Guides
+    - [Guides](/cli/guides)
+    - [Daily reconciliation close](/cli/guides/cierre-diario)
+    - [Ad-hoc investigation](/cli/guides/investigacion-adhoc)
+    - [Set up a new reconciliation](/cli/guides/nueva-conciliacion)
+    - [Schedule tasks](/cli/guides/programar-tareas)
+    - [Audit and traceability](/cli/guides/auditoria)
+    - [Onboarding and autocompletion](/cli/guides/onboarding-y-completado)
+    - [Observe and debug](/cli/guides/observar-y-depurar)
+  - Reference
+    - [Reference](/cli/reference): Command reference for the Simetrik CLI, grouped by area.
+    - Account & workspace
+      - [cache clear](/cli/reference/account/cache-clear): Remove non-sensitive caches (BFF compat, access gate, version check, GET responses). Preserves config.json (tokens) and logs/ (audit trail).
+      - [config](/cli/reference/account/config): Subcommands of simetrik config.
+      - [login](/cli/reference/account/login): Log in to Simetrik and save a token to your profile.
+      - [logout](/cli/reference/account/logout): Revoke the BFF token and clear it from the local profile.
+      - [workspace](/cli/reference/account/workspace): Subcommands of simetrik workspace.
+      - [delete](/cli/reference/account/delete): Subcommands of simetrik delete.
+    - Sources & data
+      - [describe](/cli/reference/sources/describe): List workspace resources or describe a specific one.
+      - [source](/cli/reference/sources/source): Subcommands of simetrik source.
+      - [file](/cli/reference/sources/file): Subcommands of simetrik file.
+      - [data query](/cli/reference/sources/data-query): Query row data from a resource with filtering, sorting, and pagination.
+    - Onboarding & devx
+      - [doctor](/cli/reference/onboarding/doctor): Diagnose the simetrik install, config, auth, network, and shell.
+      - [update](/cli/reference/onboarding/update): Update the Simetrik CLI to the latest version.
+      - [version](/cli/reference/onboarding/version): Print the CLI version.
+      - [skill](/cli/reference/onboarding/skill): Subcommands of simetrik skill.
+      - [completion](/cli/reference/onboarding/completion): Print the shell completion script for the given shell (bash | zsh | fish | pwsh).
+      - [open](/cli/reference/onboarding/open): Open a Simetrik resource or the dashboard in your browser.
+      - [samples](/cli/reference/onboarding/samples): List the starter project templates available to `init`.
+      - [init](/cli/reference/onboarding/init): Scaffold a starter project from a template into a directory.
+    - Scheduling & tasks
+      - [schedule](/cli/reference/scheduling/schedule): Subcommands of simetrik schedule.
+      - [task](/cli/reference/scheduling/task): Subcommands of simetrik task.
+      - [alarm](/cli/reference/scheduling/alarm): Subcommands of simetrik alarm.
+      - [approval](/cli/reference/scheduling/approval): Subcommands of simetrik approval.
+    - Reconciliation
+      - [recon](/cli/reference/reconciliation/recon): Subcommands of simetrik recon.
+      - [ruleset](/cli/reference/reconciliation/ruleset): Subcommands of simetrik ruleset.
+    - Recon
+      - [recon](/cli/reference/recon/recon): Subcommands of simetrik recon.
+    - Accounting
+      - [schema](/cli/reference/accounting/schema): Without flags: prints a small catalog of operations. With --section: prints the full spec of one section (create | update-basic | update-advanced | delete | payload | enums | domain-rules | connections).
+    - Accounting-automation
+      - [accounting-automation](/cli/reference/accounting-automation/accounting-automation): Subcommands of simetrik accounting-automation.
+    - Accounting-integrations
+      - [accounting-integrations](/cli/reference/accounting-integrations/accounting-integrations): Subcommands of simetrik accounting-integrations.
+    - Accounting-entry
+      - [accounting-entry](/cli/reference/accounting-entry/accounting-entry): Subcommands of simetrik accounting-entry.
+    - Advanced reconciliation
+      - [adv-recon](/cli/reference/advanced-recon/adv-recon): Subcommands of simetrik adv-recon.
+      - [vlookup](/cli/reference/advanced-recon/vlookup): Subcommands of simetrik vlookup.
+    - Adv-recon
+      - [adv-recon](/cli/reference/adv-recon/adv-recon): Subcommands of simetrik adv-recon.
+    - Transforms
+      - [union](/cli/reference/transforms/union): Subcommands of simetrik union.
+      - [join](/cli/reference/transforms/join): Subcommands of simetrik join.
+      - [group](/cli/reference/transforms/group): Subcommands of simetrik group.
+      - [column](/cli/reference/transforms/column): Subcommands of simetrik column.
+      - [massive-column](/cli/reference/transforms/massive-column): Subcommands of simetrik massive-column.
+      - [segment](/cli/reference/transforms/segment): Subcommands of simetrik segment.
+    - Consolidation & balances
+      - [consolidation](/cli/reference/consolidation/consolidation): Subcommands of simetrik consolidation.
+      - [snapshot](/cli/reference/consolidation/snapshot): Subcommands of simetrik snapshot.
+      - [opening-records](/cli/reference/consolidation/opening-records): Subcommands of simetrik opening-records.
+      - [cumulative-balance create](/cli/reference/consolidation/cumulative-balance-create): Create a cumulative balance: a running total of a numeric column over time for a segment.
+    - Column
+      - [column](/cli/reference/column/column): Subcommands of simetrik column.
+    - Resources & templates
+      - [resource](/cli/reference/resources/resource): Subcommands of simetrik resource.
+      - [graph](/cli/reference/resources/graph): Subcommands of simetrik graph.
+      - [template upload](/cli/reference/resources/template-upload): Upload a template by passing the JSON file path directly.
+      - [folder](/cli/reference/resources/folder): Subcommands of simetrik folder.
+    - Exports & integrations
+      - [integration](/cli/reference/exports/integration): Subcommands of simetrik integration.
+      - [export](/cli/reference/exports/export): Subcommands of simetrik export.
+    - Declarative flows
+      - [run](/cli/reference/fixtures/run): Run a declarative playbook file (YAML or JSON), chaining steps with inter-step references.
+    - Dashboard
+      - [dashboard](/cli/reference/dashboard/dashboard): Subcommands of simetrik dashboard.
+    - Dataset
+      - [dataset](/cli/reference/dataset/dataset): Subcommands of simetrik dataset.
+    - Export
+      - [export](/cli/reference/export/export): Subcommands of simetrik export.
+    - Observability
+      - [notification listen](/cli/reference/observability/notification-listen): Listen for real-time platform notifications via SSE.
+
+Connects to the events sidecar and streams notifications to stdout.
+In JSON mode (--output json), each event is printed as a single JSON line (NDJSON).
+In text mode, events are formatted with timestamps.
+
+Press Ctrl+C to stop.
+      - [logs tail](/cli/reference/observability/logs-tail): Follow the current session log (~/.simetrik/logs/latest.ndjson) as it is written
+    - Monitor
+      - [monitor](/cli/reference/monitor/monitor): Subcommands of simetrik monitor.
+    - Incident
+      - [incident](/cli/reference/incident/incident): Subcommands of simetrik incident.
+    - Smart-rules
+      - [suggest](/cli/reference/smart-rules/suggest): Suggest column-matching rules for a resource pair or a reconciliation.
+    - Spec
+      - [export](/cli/reference/spec/export): Export the machine-readable CLI spec (flat cli-spec JSON) to stdout or a file.
+  - [What the CLI can't do](/cli/limits)
+  - [Troubleshooting](/cli/troubleshooting)
+  - [Changelog](/cli/changelog)
+- MCP
+  - [MCP](/mcp): Connect Claude — or any MCP client — to Simetrik with one URL. No install, no terminal, no API key.
+  - [Connect](/mcp/connect): Who adds the server, how each person turns it on, and the one permission setting worth changing.
+  - [What you can ask for](/mcp/what-you-can-ask-for): The kinds of questions the MCP server answers, with phrasing that works.
+  - [Tools](/mcp/tools): Read tools, session tools and the Agent — how each behaves, and where the server stops.
+  - [Multiple workspaces](/mcp/multiple-workspaces): Work across several workspaces in one conversation, and add one without reconnecting.
+  - [Limits](/mcp/limits): Run caps, how long the Agent takes, session lifetime, and region availability.
+  - [Data handling](/mcp/data-handling): What the server can reach, what it masks, and what happens when you turn it off.
+  - [Troubleshooting](/mcp/troubleshooting): Missing pickers, empty workspace lists, permission errors and slow Agent runs.
+- Administration
+  - [Manage users and roles via Active Directory](/administration): Provision Simetrik roles for your organization's users through Microsoft Entra ID (Azure AD) security groups.

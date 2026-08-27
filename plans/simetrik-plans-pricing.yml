@@ -1,0 +1,41 @@
+generated: '2026-08-27'
+method: searched
+source: >-
+  Probed https://simetrik.com/pricing/ (HTTP 404), walked the full published page sitemap at
+  https://simetrik.com/page-sitemap.xml, and read the site navigation and footer on
+  https://simetrik.com/ and https://simetrik.com/platform/ (both HTTP 200), 2026-08-27.
+plan_count: 0
+pricing_published: false
+model: enterprise-contact-sales
+currency: null
+plans: []
+note: >-
+  Simetrik publishes no pricing of any kind - no plans, no tiers, no per-transaction or per-record
+  rate, no free tier, no trial. There is no /pricing/ page (404) and no pricing entry anywhere in the
+  site's own published page sitemap, which lists every English, Spanish and Portuguese page. The
+  primary and only conversion path in the site navigation is "Request a demo"
+  (https://simetrik.com/request-demo/, HTTP 200), with "Login" (https://app.simetrik.com/) for
+  existing customers. This is a deliberate enterprise sales motion rather than a missing page - the
+  product is sold to PSPs, acquirers, issuers, banks and marketplaces, and account provisioning
+  (workspaces, roles, the CLI/agent access gate, export quotas, even integration connections) is
+  described throughout the docs as administrator- or support-provisioned.
+quota_signals_without_prices:
+  note: >-
+    Although no prices are published, several usage boundaries ARE, and they are the closest thing to
+    a published entitlement. They are recorded in rate-limits/simetrik-rate-limits.yml.
+  signals:
+  - MCP Agent runs capped at 50/day and 500/month per user, raiseable by contacting Simetrik.
+  - >-
+    On-demand export executions capped per workspace per day by a feature flag, raiseable by an
+    administrator.
+  - >-
+    Workspace access to the CLI and MCP is itself gated per workspace and per role, not on by default.
+signup:
+  self_service: false
+  url: https://simetrik.com/request-demo/
+  http_status: 200
+login:
+  url: https://app.simetrik.com/
+  http_status: 200
+free_tier: false
+trial_published: false

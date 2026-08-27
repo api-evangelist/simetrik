@@ -1,0 +1,100 @@
+generated: '2026-08-27'
+method: searched
+source: >-
+  https://trust.simetrik.com/ (HTTP 200), https://simetrik.com/security/ (HTTP 200),
+  https://simetrik.com/information-security-privacy-policy/ (HTTP 200),
+  https://simetrik.com/data-privacy-treatment-policy/ (HTTP 200), https://docs.simetrik.com/mcp/data-handling,
+  and a DNS lookup of trust.simetrik.com, 2026-08-27.
+note: >-
+  probe-security-programs.py returned trust=none for this provider. That was a false negative: the
+  trust center is served from a CNAME subdomain (trust.simetrik.com ->
+  667b5a6ebb4f7b57d3197659.cname.vantatrust.com) whose body is a JavaScript shell, so an automated
+  content probe finds no certification strings. The certifications below are read from Simetrik's own
+  first-party security page, which names them in prose, not from the trust center itself.
+trust_center:
+  published: true
+  url: https://trust.simetrik.com/
+  http_status: 200
+  title: Simetrik Trust Center
+  provider: Vanta
+  provider_evidence: trust.simetrik.com is a CNAME to 667b5a6ebb4f7b57d3197659.cname.vantatrust.com
+  content_readable: false
+  content_note: >-
+    The page returns a 7 KB HTML shell and renders its content client-side, so the certification list,
+    document requests and subprocessor inventory are not machine-readable from the served body. Access
+    to actual audit reports is the usual Vanta gated flow (request + NDA), not an open download.
+  linked_from: Site header and footer navigation on simetrik.com, labelled "Trust Center".
+certifications:
+- name: ISO/IEC 27001
+  domain: Information security management
+  status: claimed
+- name: ISO/IEC 27701
+  domain: Privacy information management
+  status: claimed
+- name: ISO/IEC 27018
+  domain: Protection of PII in public clouds
+  status: claimed
+- name: SOC 1 Type 2
+  domain: Controls relevant to financial reporting
+  status: claimed
+- name: SOC 2 Type 2
+  domain: Security, availability, confidentiality and privacy
+  status: claimed
+- name: SOC 3
+  domain: General-use report
+  status: claimed
+- name: PCI DSS
+  domain: Payment card data handling
+  status: claimed
+certification_evidence: >-
+  All seven are named verbatim in the Compliance FAQ on https://simetrik.com/security/. `status:
+  claimed` throughout because no certificate number, auditor name, report date or scope statement is
+  published on any public page - the evidence sits behind the trust center. This is normal for the
+  category and is recorded as a provenance fact, not a doubt about the certifications.
+published_policies:
+- name: Information Security & Privacy Policy
+  url: https://simetrik.com/information-security-privacy-policy/
+  http_status: 200
+  covers: >-
+    Risk-based protection of information assets, the confidentiality/integrity/availability
+    principles, shared-responsibility culture, training and awareness, and internal incident reporting
+    by employees, contractors and third parties.
+- name: Data Treatment Policy
+  url: https://simetrik.com/data-privacy-treatment-policy/
+  http_status: 200
+- name: Privacy Notice
+  url: https://simetrik.com/privacy-notice/
+  http_status: 200
+- name: Cookie Policy
+  url: https://simetrik.com/cookie-policy/
+- name: Code of Ethics (employees)
+  url: https://simetrik.com/legal/code-of-ethics-employees/
+- name: Code of Ethics (third parties)
+  url: https://simetrik.com/legal/code-of-ethics-third-parties/
+technical_controls_published:
+- Encryption in transit on all external and internal communications.
+- Encryption at rest for all stored data.
+- Least-privilege access.
+- Defence in depth.
+- >-
+  PAN truncation at the agent boundary - the MCP server sends only the first six and last four digits
+  of a card number, matching the masking the web app shows on screen.
+- Every MCP call is authenticated, authorized and logged, acting as the signed-in user.
+vulnerability_disclosure:
+  published: false
+  security_txt: false
+  security_txt_note: >-
+    /.well-known/security.txt returns 403 on simetrik.com, 404 on docs.simetrik.com and
+    mcp.us.simetrik.com, and a shell-installer body on cli.simetrik.com. No RFC 9116 file is served on
+    any host.
+  bug_bounty: false
+  bug_bounty_note: hackerone.com/simetrik and bugcrowd.com/simetrik both return 404.
+  disclosure_page: false
+  security_contact: null
+  note: >-
+    HONEST GAP. Simetrik publishes a formal information security policy and a full certification set,
+    but no external vulnerability disclosure path - no security.txt, no /security/disclosure page, no
+    published security@ address, no bug bounty. The incident reporting described in the policy is
+    internal, aimed at employees, contractors and third parties, not at outside researchers. For a
+    platform holding reconciliation data for banks, PSPs, issuers and acquirers, a served
+    /.well-known/security.txt would be the single cheapest fix available.

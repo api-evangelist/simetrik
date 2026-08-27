@@ -1,0 +1,74 @@
+generated: '2026-08-27'
+method: searched
+source: >-
+  https://docs.simetrik.com/mcp/limits (HTTP 200) and the provider-published Agent Skill bundle
+  captured in skills/ (references/data-export.md), 2026-08-27.
+limit_count: 3
+headers_published: false
+headers_note: >-
+  No X-RateLimit-*, RateLimit-* or Retry-After response headers are documented, and none could be
+  observed: every Simetrik programmatic surface is authenticated, so there is no live unauthenticated
+  response to read headers off. The runtime signal Simetrik does ship is a queryable quota command
+  (`simetrik export daily-quota`) returning daily_limit, used_today and remaining_today - an agent can
+  check its remaining budget before acting rather than discovering exhaustion on a 429.
+limits:
+- name: MCP Agent runs (daily)
+  surface: MCP server
+  scope: per-user
+  window: 1 day
+  limit: 50
+  burst: null
+  applies_to: >-
+    ask_simetrik_agent - the only MCP tool that builds or changes anything. Re-asking after a slow run
+    starts a new run and is billed as one.
+  status_on_exhaustion: null
+  behaviour_on_exhaustion: >-
+    The server says the cap is reached and tells the user to ask their Simetrik contact to raise it.
+    The HTTP status is not documented.
+  source: https://docs.simetrik.com/mcp/limits
+- name: MCP Agent runs (monthly)
+  surface: MCP server
+  scope: per-user
+  window: 30 days (calendar month)
+  limit: 500
+  burst: null
+  applies_to: ask_simetrik_agent
+  status_on_exhaustion: null
+  source: https://docs.simetrik.com/mcp/limits
+- name: On-demand export executions
+  surface: CLI
+  scope: per-workspace
+  window: 1 day (resets at UTC midnight)
+  limit: null
+  limit_note: >-
+    The daily limit is real and enforced server-side but its VALUE is configured per workspace by
+    feature flag, so no number is published. It is readable at runtime: `simetrik export daily-quota`
+    returns daily_limit, used_today and remaining_today, and `export execute` returns the same quota
+    snapshot alongside the dispatch.
+  burst: null
+  applies_to: simetrik export execute - manually triggering a scheduled export outside its cycle.
+  status_on_exhaustion: 429
+  behaviour_on_exhaustion: >-
+    The API rejects the call with HTTP 429. The caller must wait for the UTC-midnight reset or ask an
+    admin to raise the flag.
+  source: skills/simetrik-cli-operator.md (references/data-export.md)
+uncapped:
+- surface: MCP server
+  operations: Read tools
+  note: Documented explicitly - "Read tools aren't capped."
+pagination_caps:
+  note: >-
+    Not rate limits, but the response-size caps an agent must plan around. See
+    conventions/simetrik-conventions.yml.
+  caps:
+  - resource list: default --limit 50, maximum 200; a truncated page carries a `warnings` field
+  - accounting list surfaces: --page-size maximum 500
+  - integration list-connections: --page-size maximum 200
+  - dashboard context import: chunked client-side above 2000 changes
+other_caps:
+  agent_run_duration: >-
+    Agent runs take minutes, not seconds. A run that outlives the client's wait returns a session id
+    and the answer is collected later. No timeout value is published.
+  regions: >-
+    The MCP server is US-region only as of 2026-08-27 - an availability constraint, not a rate limit,
+    but it bounds who can call at all.

@@ -1,0 +1,159 @@
+generated: '2026-08-27'
+method: searched
+source: >-
+  https://simetrik.com/security/ (HTTP 200), https://trust.simetrik.com/ (HTTP 200),
+  https://mcp.us.simetrik.com/.well-known/oauth-authorization-server (HTTP 200),
+  https://mcp.us.simetrik.com/.well-known/oauth-protected-resource/mcp (HTTP 200),
+  https://docs.simetrik.com/administration (HTTP 200) and https://docs.simetrik.com/mcp, 2026-08-27.
+standards:
+- id: oauth2
+  conforms: true
+  evidence: >-
+    Live RFC 6749 / OAuth 2.1 authorization server on mcp.us.simetrik.com advertising
+    authorization_code and refresh_token grants, response_type code, and four token endpoint auth
+    methods (client_secret_post, client_secret_basic, private_key_jwt, none). Verified by anonymous
+    fetch of the authorization server metadata document, not by a docs claim.
+  artifact: well-known/simetrik-oauth-authorization-server.json
+- id: rfc8414
+  name: OAuth 2.0 Authorization Server Metadata
+  conforms: true
+  evidence: >-
+    /.well-known/oauth-authorization-server returns 200 with issuer, authorization_endpoint,
+    token_endpoint, registration_endpoint, scopes_supported, response_types_supported,
+    grant_types_supported, token_endpoint_auth_methods_supported and code_challenge_methods_supported.
+  artifact: well-known/simetrik-oauth-authorization-server.json
+- id: rfc9728
+  name: OAuth 2.0 Protected Resource Metadata
+  conforms: true
+  evidence: >-
+    /.well-known/oauth-protected-resource/mcp returns 200 with resource, authorization_servers,
+    scopes_supported and bearer_methods_supported - and the 401 challenge from the MCP endpoint
+    correctly advertises that exact document in its WWW-Authenticate resource_metadata parameter, which
+    is the behaviour RFC 9728 specifies rather than merely serving the file.
+  artifact: well-known/simetrik-oauth-protected-resource.json
+- id: rfc7636
+  name: PKCE
+  conforms: true
+  evidence: code_challenge_methods_supported [S256] in the authorization server metadata.
+- id: rfc7591
+  name: OAuth 2.0 Dynamic Client Registration
+  conforms: true
+  evidence: >-
+    registration_endpoint https://mcp.us.simetrik.com/register advertised, plus
+    client_id_metadata_document_supported true. This is what lets an MCP client connect with a URL
+    alone and no pre-provisioned credential.
+- id: oidc
+  conforms: partial
+  evidence: >-
+    The `openid`, `profile` and `email` scopes are advertised and sign-in is OIDC-flavoured, but no
+    /.well-known/openid-configuration is served on any Simetrik host (404 on mcp.us.simetrik.com and
+    docs.simetrik.com, 403 on simetrik.com), so a full OIDC provider discovery document is not
+    published.
+- id: mcp
+  name: Model Context Protocol
+  conforms: true
+  evidence: >-
+    Hosted remote server at https://mcp.us.simetrik.com/mcp speaking Streamable HTTP (HEAD returns 405
+    with allow: DELETE, POST) and implementing MCP authorization - an anonymous tools/list returns 401
+    with an RFC 9728 resource_metadata pointer rather than a generic error. Tool schemas require an
+    authenticated tools/list and are not captured.
+  artifact: mcp/simetrik-mcp.yml
+- id: llmstxt
+  name: llms.txt
+  conforms: true
+  evidence: https://docs.simetrik.com/llms.txt returns 200 with a real llms.txt index; llms-full.txt is also served.
+  artifact: llms/simetrik-llms.txt
+- id: agent-skills
+  name: Agent Skills
+  conforms: true
+  evidence: >-
+    A versioned Claude Agent Skill bundle (SKILL.md with name/description frontmatter plus 35 topic
+    references) is published as a first-class release artifact with a sha256 in the CLI release
+    manifest, and installed by the provider's own installer.
+  artifact: skills/_index.yml
+- id: pagination
+  conforms: true
+  evidence: >-
+    Page-number pagination (--page 1-indexed, --page-size, max 500 on accounting surfaces and 200 on
+    integrations) plus limit-based listing (--limit, default 50, max 200), with an explicit partial-page
+    `warnings` marker.
+  artifact: conventions/simetrik-conventions.yml
+- id: idempotency
+  conforms: partial
+  evidence: >-
+    No client-supplied Idempotency-Key header. Specific operations are documented as inherently
+    idempotent (activate/deactivate toggles, dashboard context upserts, data-cell set-not-append
+    writes), and chunked writes are explicitly safe to re-run for that reason.
+  artifact: conventions/simetrik-conventions.yml
+- id: rfc9457
+  name: Problem Details for HTTP APIs
+  conforms: false
+  evidence: >-
+    Errors are named string codes with a human message, not application/problem+json. No type URIs.
+  artifact: errors/simetrik-error-codes.yml
+- id: scim
+  conforms: false
+  evidence: >-
+    No SCIM endpoint or urn:ietf:params:scim schema URN is published. Enterprise user/role
+    provisioning is done through Microsoft Entra ID security groups instead - directory-driven, but not
+    SCIM as published.
+- id: saml-oidc-sso
+  name: Enterprise SSO
+  conforms: true
+  evidence: >-
+    Simetrik roles are provisioned to users through Microsoft Entra ID (Azure AD) security groups, so
+    access and role assignment come from the corporate directory.
+  source: https://docs.simetrik.com/administration
+- id: sse
+  name: Server-Sent Events
+  conforms: true
+  evidence: >-
+    `simetrik notification listen` connects to the events sidecar and streams platform notifications
+    over SSE, emitting NDJSON with --output json. This is Simetrik's only published event/streaming
+    surface; there is no AsyncAPI document and no webhook catalog.
+domain_standards:
+  market: Financial reconciliation, accounting close and payments operations
+  note: >-
+    REWARD-ONLY check. Simetrik's contract surface (CLI + MCP) declares no domain-standard message
+    format in itself - there is no ISO 20022 message type, X12/EDIFACT envelope, FDX or PSD2 shape, no
+    OData $metadata and no SCIM URN anywhere in the published CLI spec surface, the MCP documentation
+    or the OAuth metadata. What Simetrik ships is a generic ingestion-and-matching engine that consumes
+    whatever format a bank, card network, PSP or ERP emits, plus per-ERP connections configured with
+    ordinary HTTP auth methods (BASIC, BEARER, API_KEY, OAUTH1, OAUTH2). No domain standard is claimed
+    here because none is declared in the contract; a prose claim on a marketing page would not qualify
+    and none was found either.
+  declared: []
+compliance:
+  published: true
+  source: https://simetrik.com/security/
+  trust_center: https://trust.simetrik.com/
+  certifications:
+  - name: ISO/IEC 27001
+    domain: Information security management
+  - name: ISO/IEC 27701
+    domain: Privacy information management
+  - name: ISO/IEC 27018
+    domain: Protection of PII in public clouds
+  - name: SOC 1 Type 2
+    domain: Controls relevant to financial reporting
+  - name: SOC 2 Type 2
+    domain: Security, availability, confidentiality and privacy
+  - name: SOC 3
+    domain: General-use report
+  - name: PCI DSS
+    domain: Payment card data handling
+  certification_note: >-
+    Named verbatim on the provider's own security page. No certificate numbers, auditor names, report
+    dates or scope statements are published on the public page; the Vanta-hosted trust center at
+    trust.simetrik.com is the gated route to evidence.
+  controls_published:
+  - Encryption in transit for all external and internal communications.
+  - Encryption at rest for all stored data.
+  - Least-privilege access.
+  - Defence in depth / multiple security layers.
+  - Continuous control improvement.
+  data_protection_specific:
+  - >-
+    PAN truncation at the MCP boundary - where Simetrik identifies a card number, only the first six
+    and last four digits are sent, so a full card number never reaches the model. This is a concrete,
+    verifiable PCI-relevant control published as agent-surface behaviour rather than as a generic claim.

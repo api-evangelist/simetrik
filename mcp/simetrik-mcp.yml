@@ -1,0 +1,125 @@
+generated: '2026-08-27'
+method: probed
+source: >-
+  https://docs.simetrik.com/mcp (and /mcp/connect, /mcp/tools, /mcp/limits, /mcp/data-handling),
+  plus live anonymous probes of https://mcp.us.simetrik.com/mcp and its OAuth metadata documents,
+  2026-08-27.
+name: Simetrik MCP Server
+description: >-
+  Simetrik's first-party hosted MCP server. The provider's own framing is "connect Claude - or any MCP
+  client - to Simetrik with one URL. No install, no terminal, no API key." The server acts as the
+  signed-in user and enforces that user's Simetrik permissions on every call.
+deployment:
+  mode: remote
+  endpoint: https://mcp.us.simetrik.com/mcp
+  install: null
+  package: null
+  auth: oauth
+  verified: probed
+x-evidence:
+  fetched: '2026-08-27'
+  endpoint_probe:
+    url: https://mcp.us.simetrik.com/mcp
+    method: POST
+    body: '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'
+    http_status: 401
+    server: uvicorn
+    www_authenticate: >-
+      Bearer resource_metadata="https://mcp.us.simetrik.com/.well-known/oauth-protected-resource/mcp"
+    note: >-
+      The endpoint is live and speaks the MCP authorization spec correctly - it answers an anonymous
+      tools/list with a 401 carrying an RFC 9728 resource_metadata pointer rather than a generic
+      error. An unauthenticated HEAD returns 405 with "allow: DELETE, POST", confirming a Streamable
+      HTTP transport. The live tool set with real inputSchemas therefore requires an authenticated
+      introspection with a Simetrik account; the tools recorded below come from the provider's own
+      published documentation, names and behaviour only, and their input schemas are NOT captured.
+  oauth_metadata:
+    authorization_server: well-known/simetrik-oauth-authorization-server.json
+    protected_resource: well-known/simetrik-oauth-protected-resource.json
+transport: streamable-http
+authorization:
+  model: oauth2
+  spec: MCP authorization (OAuth 2.1 + RFC 9728 protected resource metadata)
+  issuer: https://mcp.us.simetrik.com/
+  authorization_endpoint: https://mcp.us.simetrik.com/authorize
+  token_endpoint: https://mcp.us.simetrik.com/token
+  registration_endpoint: https://mcp.us.simetrik.com/register
+  dynamic_client_registration: true
+  pkce: S256
+  grant_types: [authorization_code, refresh_token]
+  scopes: [openid, profile, email]
+  api_key_required: false
+  note: >-
+    Documented as "There's no API key to create, copy or rotate - your client never handles a Simetrik
+    credential." Sign-in is with the user's own Simetrik account. Docs also say that if the client
+    shows Advanced settings with OAuth fields, they should be left closed.
+tools:
+  status: documented
+  schemas_captured: false
+  schemas_note: >-
+    Only ask_simetrik_agent is named explicitly in the published docs. The read and session tools are
+    described by capability rather than by tool name, so individual tool names beyond that one are NOT
+    recorded here - inventing them would fabricate the server's surface. Full names and inputSchemas
+    require an authenticated tools/list.
+  classes:
+  - class: read
+    behaviour: Instant, no confirmation. Read-only endpoints with no server-side path to a write.
+    covers:
+    - Workspace overview
+    - Resources
+    - Match rules
+    - Row data
+    - Dashboards
+    - Datasets
+    - Previews
+    - Lineage
+    - Dependency graph
+    - Collecting the Agent's reply
+  - class: session
+    behaviour: Changes the session's reach, never data.
+    covers:
+    - Add a workspace to the current conversation
+    - Drop a workspace from the current conversation
+  - class: agent
+    behaviour: Minutes, not seconds. The client confirms before every run.
+    named_tools:
+    - name: ask_simetrik_agent
+      description: >-
+        The only tool that builds or changes anything. Hands the task to the Simetrik Agent, which
+        applies Simetrik's own reconciliation methodology. Confirming starts the run; collecting the
+        answer afterwards is a read and does not prompt again. A run that outlives the wait returns a
+        session id the client collects later.
+      write: true
+      confirms: true
+limits:
+  agent_runs_per_user_per_day: 50
+  agent_runs_per_user_per_month: 500
+  read_tools_capped: false
+  regions: [us]
+  region_note: US region only as of 2026-08-27; other regions are not served yet.
+  source: https://docs.simetrik.com/mcp/limits
+data_handling:
+  permission_model: Acts as the signed-in user; every call is authenticated, authorized and logged.
+  pan_masking: >-
+    Where Simetrik identifies a card number, the server sends only the first six and last four digits -
+    the same masking the web app shows - so a full PAN is not included in what reaches the model.
+  prompt_injection_guidance: >-
+    Docs instruct clients to treat returned rows and descriptions as data, not instructions, and to
+    review anything the agent proposes to change before approving it.
+  revocation: Removing the server from the client ends access; no key is left behind to revoke.
+  source: https://docs.simetrik.com/mcp/data-handling
+boundaries:
+- The server cannot upload local files; loading a file into a source needs the CLI or the web app.
+- The server cannot create workspaces; only an administrator can.
+- The server cannot manage users, roles or permissions; that is done in app.simetrik.com.
+- Configured approval flows are never bypassed.
+prerequisites:
+- A production Simetrik workspace in the US region.
+- The workspace gate enabled, plus the "Use CLI" permission on the user's role.
+docs:
+  overview: https://docs.simetrik.com/mcp
+  connect: https://docs.simetrik.com/mcp/connect
+  tools: https://docs.simetrik.com/mcp/tools
+  limits: https://docs.simetrik.com/mcp/limits
+  data_handling: https://docs.simetrik.com/mcp/data-handling
+  troubleshooting: https://docs.simetrik.com/mcp/troubleshooting

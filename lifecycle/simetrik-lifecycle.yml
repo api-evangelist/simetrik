@@ -1,0 +1,84 @@
+generated: '2026-08-27'
+method: searched
+source: >-
+  https://docs.simetrik.com/cli/changelog, https://cli.simetrik.com/cli/manifest.json,
+  https://status.simetrik.com/ and its Statuspage API summary,
+  https://docs.simetrik.com/cli/reference/onboarding/update, https://docs.simetrik.com/mcp/limits,
+  2026-08-27.
+versioning:
+  scheme: semver
+  applies_to: The `simetrik` CLI binary and the Claude Agent Skill bundle.
+  current_version: 1.3.8
+  current_released: '2026-08-27'
+  skill_version: 1.3.21
+  channels: [stable]
+  channel_note: >-
+    The installer accepts SIMETRIK_CHANNEL / --channel, but only `stable` is published in the release
+    manifest today.
+  manifest: https://cli.simetrik.com/cli/manifest.json
+  api_versioning: none-published
+  api_versioning_note: >-
+    There is no public HTTP API and therefore no path or header version to record. Client/server
+    compatibility is negotiated instead: the CLI caches a BFF compatibility record
+    (~/.simetrik/bff_compat.json) that `simetrik cache clear` forces to revalidate on the next command.
+  upgrade:
+    command: simetrik update
+    behaviour: >-
+      For standalone-binary installs the command performs the upgrade. For Homebrew or npm installs it
+      does NOT touch the package manager - it prints the matching upgrade command and stops.
+deprecation_policy:
+  published: false
+  sunset_header: false
+  deprecation_header: false
+  rfc8594: false
+  note: >-
+    No deprecation policy, sunset schedule or RFC 8594 Deprecation/Sunset header usage is published.
+    The only deprecation signal found is inline in the CLI reference and the Agent Skill: for example
+    `adv-recon compensation-create` is marked deprecated in favour of `adv-recon compensate`. There is
+    no dated removal commitment attached to it.
+  observed_deprecations:
+  - item: adv-recon compensation-create
+    replacement: adv-recon compensate
+    removal_date: null
+    source: skills/simetrik-cli-operator.md (references/advanced-recon.md)
+status_page:
+  published: true
+  url: https://status.simetrik.com/
+  provider: Atlassian Statuspage
+  page_name: Simetrik NCLC
+  api: https://status.simetrik.com/api/v2/summary.json
+  timezone: America/Bogota
+  status_at_probe: All Systems Operational
+  probed: '2026-08-27'
+  http_status: 200
+  component_model: >-
+    Components are published per service AND per tenant region - Accounting Translator API service,
+    Accounting Translator WEB application, Data Analysis API service, Data Analysis WEB application,
+    Authentication service and Download service each appear once per tenant group (Tenant Global,
+    Tenant Brazil and others). That per-region decomposition is unusually granular and is the clearest
+    public evidence of Simetrik's multi-region deployment.
+changelog:
+  published: true
+  url: https://docs.simetrik.com/cli/changelog
+  http_status: 200
+  entries_published: false
+  note: >-
+    The page exists and is served, and states it is "automatically generated on every release", but it
+    currently renders no entries - the served markdown at /cli/changelog.md contains only the heading
+    and that sentence. The docs home also lists a platform-wide Changelog as "Coming soon". The only
+    dated release evidence available is the release manifest. See changelog/simetrik-changelog.yml.
+sla:
+  published: false
+  note: >-
+    No public SLA, uptime commitment or support-response target was found. Simetrik sells
+    enterprise-only with no self-service tier, so terms are presumably contractual - see
+    plans/simetrik-plans-pricing.yml.
+support_lifecycle:
+  cli_minimum_version: >-
+    The Agent Skill states "Latest CLI release required" and instructs `simetrik update -y` before
+    work, which is effectively a rolling-latest support posture rather than a supported-versions
+    matrix.
+  mcp_regions: [us]
+  mcp_region_note: >-
+    The MCP server is US-region only as of 2026-08-27; accounts in other regions are told to contact
+    their Simetrik representative.

@@ -1,0 +1,39 @@
+generated: '2026-08-27'
+method: probed
+source: >-
+  https://mcp.us.simetrik.com/.well-known/oauth-authorization-server (HTTP 200) and
+  https://mcp.us.simetrik.com/.well-known/oauth-protected-resource/mcp (HTTP 200), both fetched
+  anonymously 2026-08-27.
+docs: https://docs.simetrik.com/mcp/connect
+note: >-
+  These are the scopes the running authorization server advertises, not a scope reference page -
+  Simetrik publishes no scopes/permissions reference, and the docs actively tell users to leave the
+  client's OAuth advanced settings closed. The three scopes are identity scopes only; they carry no
+  Simetrik-resource authorization. Actual authorization is the signed-in user's own workspace role and
+  permissions, enforced server-side on every call, plus two independent gates (the workspace must be
+  enabled for CLI/agent access and the role must hold the "Use CLI" permission). That means the OAuth
+  scope set does NOT describe what an agent can reach - see authentication/simetrik-authentication.yml.
+authorization_server: https://mcp.us.simetrik.com/
+protected_resource: https://mcp.us.simetrik.com/mcp
+scope_count: 3
+scopes:
+- name: openid
+  description: OpenID Connect authentication of the Simetrik user.
+  kind: identity
+- name: profile
+  description: Basic profile claims for the signed-in Simetrik user.
+  kind: identity
+- name: email
+  description: Email address of the signed-in Simetrik user.
+  kind: identity
+permission_model:
+  granularity: workspace role
+  documented_permissions:
+  - name: Use CLI
+    description: >-
+      Role-level permission required for both the CLI and the MCP server. Without it the workspace
+      does not appear on the connect picker and tools return permission errors.
+    granted_in: app.simetrik.com
+  note: >-
+    Simetrik does not publish a full permission catalog. Only the "Use CLI" permission is named in the
+    public docs; the rest are referred to generically as "the corresponding access for your role".

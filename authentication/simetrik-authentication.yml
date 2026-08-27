@@ -1,0 +1,98 @@
+generated: '2026-08-27'
+method: probed
+source: >-
+  Live anonymous fetch of https://mcp.us.simetrik.com/.well-known/oauth-authorization-server and
+  https://mcp.us.simetrik.com/.well-known/oauth-protected-resource/mcp (both HTTP 200), the 401
+  WWW-Authenticate challenge from https://mcp.us.simetrik.com/mcp, plus
+  https://docs.simetrik.com/mcp/connect, https://docs.simetrik.com/cli/reference/account/login and
+  https://docs.simetrik.com/administration, 2026-08-27.
+note: >-
+  Derived from OpenAPI securitySchemes was not possible - Simetrik publishes no OpenAPI. This profile
+  is built from the provider's live OAuth metadata documents and its own auth documentation instead,
+  which is a stronger source than a spec declaration because the metadata is served by the running
+  authorization server.
+surfaces:
+- surface: MCP server
+  endpoint: https://mcp.us.simetrik.com/mcp
+  scheme_type: oauth2
+  spec: MCP authorization - OAuth 2.1 with RFC 9728 protected resource metadata
+  flows:
+  - flow: authorizationCode
+    authorization_url: https://mcp.us.simetrik.com/authorize
+    token_url: https://mcp.us.simetrik.com/token
+    refresh_url: https://mcp.us.simetrik.com/token
+    pkce: S256
+    pkce_required: true
+    scopes:
+      openid: OpenID Connect authentication of the Simetrik user
+      profile: Basic profile claims for the signed-in Simetrik user
+      email: Email address of the signed-in Simetrik user
+  dynamic_client_registration:
+    supported: true
+    registration_endpoint: https://mcp.us.simetrik.com/register
+    client_id_metadata_document_supported: true
+  token_endpoint_auth_methods: [client_secret_post, client_secret_basic, private_key_jwt, none]
+  grant_types: [authorization_code, refresh_token]
+  response_types: [code]
+  bearer_methods: [header]
+  challenge:
+    http_status: 401
+    www_authenticate: >-
+      Bearer resource_metadata="https://mcp.us.simetrik.com/.well-known/oauth-protected-resource/mcp"
+  api_key: false
+  api_key_note: >-
+    Documented explicitly: "There's no API key to create, copy or rotate - your client never handles a
+    Simetrik credential." Removing the server from the client ends access; there is no key left to
+    revoke.
+- surface: CLI
+  endpoint: BFF, selected by an --env preset; not a published host
+  scheme_type: oauth2
+  command: simetrik login
+  flows:
+  - flow: authorizationCode
+    provider: Auth0
+    browser: true
+    note: >-
+      Default browser-based login. --no-browser prints the URL instead of opening it.
+  - flow: deviceCode
+    provider: Auth0
+    note: >-
+      `simetrik login --device` uses the device authorization flow with no browser, documented for
+      SSH, CI and agents.
+  token_storage: >-
+    The resulting BFF token is written to a named profile in ~/.simetrik/config.json. `simetrik config`
+    shows it masked (last 8 characters only). `simetrik logout` revokes it server-side and clears it
+    locally.
+  ttl_controls:
+  - flag: --ttl
+    unit: hours
+    controls: CLI session lifetime
+  - flag: --access-token-ttl
+    unit: seconds
+    controls: Access token lifetime
+  custom_deployments:
+    flag: --url
+    note: >-
+      A raw BFF base URL plus an optional bearer --token may be set on a profile, documented as
+      reserved for custom or self-hosted deployments. Passing both --env and --url is rejected.
+authorization_model:
+  type: rbac
+  description: >-
+    Access is the signed-in user's own Simetrik permissions - the MCP server "acts as you. A Viewer
+    sees what a Viewer sees." Two independent gates control programmatic access at all: the workspace
+    must be enabled for CLI/agent access, and the user's role must carry the "Use CLI" permission.
+    The same tool can succeed in one workspace and fail in another for the same account.
+  administration: Roles, permissions and users are managed in app.simetrik.com, not via CLI or MCP.
+  enterprise_identity:
+    sso: true
+    provider: Microsoft Entra ID (Azure Active Directory)
+    mechanism: >-
+      Simetrik roles are provisioned to users through Entra ID security groups, so access and role
+      assignment come from the corporate directory rather than being set by hand in the platform.
+    docs: https://docs.simetrik.com/administration
+audit: Every MCP call is documented as authenticated, authorized and logged.
+docs:
+  mcp_connect: https://docs.simetrik.com/mcp/connect
+  cli_login: https://docs.simetrik.com/cli/getting-started/login
+  enable_cli_role: https://docs.simetrik.com/cli/getting-started/login/enable-cli-role
+  administration: https://docs.simetrik.com/administration

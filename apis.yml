@@ -1,23 +1,133 @@
 aid: simetrik
 name: Simetrik
-description: 'Simetrik is a company surfaced via the API Evangelist harvest backlog (source: secondary-market)
-  and added to the network as a stub for full-pipeline profiling.'
+description: >-
+  Simetrik is an AI-powered financial control and reconciliation platform, founded in Bogota, Colombia,
+  that sits underneath a company's finance stack and reconciles transactions across payment gateways,
+  banks, card networks, ERPs, internal ledgers and operational systems. The platform pairs a no-code
+  reconciliation engine (native sources, segments, calculated columns, unions, joins, groups, standard
+  and advanced reconciliations, sweeps, compensations, consolidations, opening records and data exports)
+  with an Accounting Translator, an Operation Center, scheduling, alarms and approvals. Its developer
+  surface is deliberately agent-first rather than REST-first: Simetrik publishes a cross-platform
+  `simetrik` CLI, a versioned Claude Agent Skill bundle shipped in lockstep with that CLI, and a hosted
+  remote MCP server at https://mcp.us.simetrik.com/mcp that an MCP client connects to with a single URL
+  and an OAuth sign-in, with no API key to create or rotate. Customers are concentrated in payments and
+  financial services: PSPs, acquirers, issuers, marketplaces, neobanks, banks and retailers.
+image: https://simetrik.com/wp-content/uploads/2026/07/cropped-simetrik_logo-192x192.png
 url: https://raw.githubusercontent.com/api-evangelist/simetrik/refs/heads/main/apis.yml
 x-type: company
 x-source: harvest:secondary-market
-x-tier: stub
-x-tier-reason: harvest
 specificationVersion: '0.20'
 created: '2026-08-27'
 modified: '2026-08-27'
 tags:
 - Company
-apis: []
+- Reconciliation
+- Financial Operations
+- Payments
+- Accounting
+- FinTech
+- Financial Close
+- Data Integration
+- Agents
+- MCP
+- Latin America
 maintainers:
 - FN: Kin Lane
   email: kin@apievangelist.com
 - FN: APIs.json
   email: info@apis.io
+apis:
+- aid: simetrik-mcp-server
+  name: Simetrik MCP Server
+  description: >-
+    Simetrik's hosted remote Model Context Protocol server. An MCP client adds one URL and signs in with
+    a Simetrik account over OAuth 2.1 (authorization code + PKCE, dynamic client registration) - there is
+    no API key to create, copy or rotate. The server exposes read tools (workspace overview, resources,
+    match rules, row data, dashboards, datasets, previews, lineage, the dependency graph), session tools
+    that add or drop a workspace from the conversation, and a single write path, ask_simetrik_agent,
+    which hands build-and-change work to the Simetrik Agent and confirms before every run. US region only.
+  humanURL: https://docs.simetrik.com/mcp
+  baseURL: https://mcp.us.simetrik.com/mcp
+  tags:
+  - MCP
+  - Reconciliation
+  - Agents
+  properties:
+  - type: MCPServer
+    url: mcp/simetrik-mcp.yml
+  - type: Documentation
+    url: https://docs.simetrik.com/mcp
+  - type: Authentication
+    url: authentication/simetrik-authentication.yml
+  - type: OAuthScopes
+    url: scopes/simetrik-scopes.yml
+  - type: RateLimits
+    url: rate-limits/simetrik-rate-limits.yml
 common:
+- type: MCPServer
+  url: mcp/simetrik-mcp.yml
 - type: Website
-  url: https://www.nasdaqprivatemarket.com/
+  url: https://simetrik.com/
+- type: DeveloperPortal
+  url: https://docs.simetrik.com/
+- type: Documentation
+  url: https://docs.simetrik.com/
+- type: APIReference
+  url: https://docs.simetrik.com/cli/reference
+- type: GettingStarted
+  url: https://docs.simetrik.com/cli/getting-started/quickstart
+- type: Support
+  url: https://simetrik.com/contact-us/
+- type: Blog
+  url: https://simetrik.com/blog/
+- type: GitHubOrganization
+  url: https://github.com/simetrik-inc
+- type: SignUp
+  url: https://simetrik.com/request-demo/
+- type: Login
+  url: https://app.simetrik.com/
+- type: TermsOfService
+  url: https://simetrik.com/legal/
+- type: PrivacyPolicy
+  url: https://simetrik.com/privacy-notice/
+- type: StatusPage
+  url: https://status.simetrik.com/
+- type: TrustCenter
+  url: https://trust.simetrik.com/
+- type: Compliance
+  url: https://simetrik.com/security/
+- type: Security
+  url: https://simetrik.com/information-security-privacy-policy/
+- type: ChangeLog
+  url: changelog/simetrik-changelog.yml
+- type: CLI
+  url: cli/simetrik-cli.yml
+- type: Packages
+  url: packages/simetrik-packages.yml
+- type: AgentSkill
+  url: skills/_index.yml
+- type: LLMsTxt
+  url: llms/simetrik-llms.txt
+- type: WellKnown
+  url: well-known/simetrik-well-known.yml
+- type: Conventions
+  url: conventions/simetrik-conventions.yml
+- type: Idempotency
+  url: conventions/simetrik-conventions.yml
+- type: Lifecycle
+  url: lifecycle/simetrik-lifecycle.yml
+- type: ErrorCatalog
+  url: errors/simetrik-error-codes.yml
+- type: Conformance
+  url: conformance/simetrik-conformance.yml
+- type: DomainSecurity
+  url: security/simetrik-domain-security.yml
+- type: Plans
+  url: plans/simetrik-plans-pricing.yml
+- type: RateLimits
+  url: rate-limits/simetrik-rate-limits.yml
+x-enrichment:
+  date: '2026-08-27'
+  status: enriched
+  artifacts_added: 21
+  pass: local-v1

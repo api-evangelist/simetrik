@@ -1,0 +1,265 @@
+generated: '2026-08-27'
+method: searched
+source: >-
+  https://docs.simetrik.com/cli/reference and its subpages, https://docs.simetrik.com/mcp/tools,
+  https://docs.simetrik.com/mcp/limits, https://docs.simetrik.com/mcp/data-handling, and the
+  provider-published Agent Skill bundle captured in skills/ (SKILL.md plus its error-handling,
+  unreconciliation, decompensation, data-export, data-cells, dashboard and accounting-automation
+  references), 2026-08-27.
+scope_note: >-
+  Simetrik publishes no REST API, so these conventions describe the two programmatic surfaces it does
+  publish - the `simetrik` CLI (which fronts an internal BFF) and the hosted MCP server. Where a rule
+  is a CLI-client behaviour rather than a wire-protocol behaviour, that is said explicitly.
+auth_style:
+  cli: OAuth authorization-code or device-code via Auth0, exchanged for a BFF token held in a local profile.
+  mcp: OAuth 2.1 authorization code + PKCE S256, dynamic client registration, no API key.
+  see: authentication/simetrik-authentication.yml
+idempotency:
+  supported: true
+  mechanism: operation-level
+  header: null
+  header_note: >-
+    There is NO Idempotency-Key header. Simetrik does not expose a generic client-supplied idempotency
+    key; instead specific operations are documented as inherently idempotent (set-not-append semantics,
+    upserts, and state toggles), which makes a mid-way failure safe to re-run without duplicating work.
+  idempotent_operations:
+  - operation: accounting-automation activate / deactivate <model_id>
+    semantics: Toggles is_active. Safe to call on an already-active or already-inactive model.
+    source: https://docs.simetrik.com/cli/reference/accounting-automation/accounting-automation
+  - operation: dashboard context-set <dashboardId>
+    semantics: >-
+      Upserts one entity's context. Because upsert is idempotent, imports larger than 2000 changes are
+      chunked client-side into multiple upsert calls and a mid-way failure is safe to re-run.
+    source: skills/simetrik-cli-operator.md (references/dashboard.md)
+  - operation: data cell set
+    semantics: >-
+      Sets fixed values and never appends, so re-running the same operation produces the same state.
+      Chunked writes are re-runnable for the same reason.
+    source: skills/simetrik-cli-operator.md (references/data-cells.md)
+  retry_guidance:
+  - >-
+    A `--wait` that returns HTTP 500 on an async command is the one documented case where a retry is
+    wrong: poll `resource describe` / `task status` for the real state instead of re-dispatching.
+  - >-
+    A `--wait` TIMEOUT is not a failure - the job is still running. Poll `task status <EVENT_ID>`.
+    Re-dispatching starts a second run, and on the MCP Agent path a re-ask is billed as a new run.
+  - >-
+    Otherwise the published rule is the opposite of retry: stop on any error, show it, and do not
+    invent an alternative payload to get past a 4xx/5xx.
+  anti_duplicate_guards:
+  - DUPLICATE_NAME is returned when a resource with that name already exists in the workspace.
+  - VERSION_ALREADY_OPEN is returned rather than opening a second concurrent draft version.
+pagination:
+  styles:
+  - style: page-number
+    params: [--page, --page-size]
+    base: 1-indexed
+    max_page_size: 500
+    applies_to: >-
+      Accounting surfaces (accounting-automation list, accounting-entry list, payload list) and other
+      list commands that expose --page.
+  - style: page-number
+    params: [--page, --page-size]
+    base: 1-indexed
+    max_page_size: 200
+    applies_to: integration list-connections and similar integration listings.
+  - style: limit
+    params: [--limit]
+    default: 50
+    max: 200
+    applies_to: resource list, adv-recon list and the generic resource listings.
+  response_fields:
+    partial_marker: warnings
+    partial_marker_note: >-
+      A truncated page carries "Partial results: showing N of M ..." in a `warnings` field. The
+      published rule is that a list result is a page, not the whole set, and must never be read as
+      proof something does not exist - narrow with --search or raise --limit instead.
+  filtering: >-
+    Most list commands take --search for a case-insensitive substring match on name, plus
+    domain-specific filters (--status, --type, --mode, --tag, date ranges, id lists).
+full_coverage_reads:
+  note: >-
+    Simetrik publishes a distinct convention for questions a page cannot answer: `data profile` and
+    `data aggregate` are pre-query reads that cover 100% of a resource, and the skill instructs agents
+    to use them to state volume, coverage or absence rather than inferring from a paged read. This is
+    an unusually explicit anti-hallucination convention for an agent surface.
+  operations: [data profile, data aggregate]
+error_envelope:
+  format: >-
+    Named string error codes (DUPLICATE_NAME, NOT_FOUND, NOT_DRAFT, VERSION_REQUIRED,
+    VERSION_ALREADY_OPEN, VALIDATION_FAILED, NO_RECORDS_TO_UNRECONCILE, NOT_FULLY_RECONCILED) surfaced
+    with a human message. Not RFC 9457 problem+json.
+  see: errors/simetrik-error-codes.yml
+  exit_codes:
+    0: Success
+    1: BFF/API error - the server rejected the request
+    2: Invalid input, or a destructive confirmation prompt cancelled / read EOF without a TTY
+    4: Authentication required - run simetrik login
+rate_limit_signaling:
+  documented_status: 429
+  documented_case: >-
+    `export execute` is rejected with HTTP 429 once a workspace's daily manual-execution quota is
+    consumed; the quota resets at UTC midnight.
+  quota_read_operation: simetrik export daily-quota
+  quota_fields: [daily_limit, used_today, remaining_today]
+  headers: null
+  headers_note: >-
+    No X-RateLimit-* / RateLimit-* / Retry-After response headers are documented, and none could be
+    observed - every programmatic surface is authenticated, so no live unauthenticated response is
+    available to read headers from. The runtime signal Simetrik does publish is a queryable quota
+    endpoint rather than a response header.
+  see: rate-limits/simetrik-rate-limits.yml
+versioning:
+  api_versioning: none-published
+  api_versioning_note: >-
+    There is no /v1/ path or version header to record, because there is no public HTTP API. The
+    versioned artifact is the CLI itself (semver, currently 1.3.8), released with a JSON manifest, and
+    the CLI negotiates compatibility with the BFF through a cached compatibility check
+    (~/.simetrik/bff_compat.json) that `cache clear` forces to revalidate.
+  resource_versioning:
+    supported: true
+    description: >-
+      Reconciliations are version-controlled objects. A confirmed reconciliation cannot be edited; the
+      caller opens a draft version (`adv-recon version-create`), edits the draft, then either
+      `confirm` (merge) or `version-discard` (drop). Only one open version is allowed at a time.
+    errors: [NOT_DRAFT, VERSION_REQUIRED, VERSION_ALREADY_OPEN, ALREADY_EDITABLE]
+async_model:
+  description: >-
+    Long-running work is dispatched as an async job that returns an event id, tracked with
+    `task status <EVENT_ID>`. Per-process FAILED/ERROR/ERRORED/CANCELLED states abort a client-side
+    wait.
+  gotcha: >-
+    `--wait` is not uniform: on `recon run`, `recon confirm`, `adv-recon confirm` and
+    `adv-recon execute` it returns instantly with exit 0 without waiting. The skill ships a truth
+    table for which commands actually wait.
+request_tracing:
+  session_log: ~/.simetrik/logs/latest.ndjson
+  follow_command: simetrik logs tail
+  event_stream: simetrik notification listen (SSE; NDJSON with --output json)
+  note: >-
+    The CLI keeps a local NDJSON audit trail that `cache clear` deliberately preserves. There is no
+    documented request-id response header.
+confirmation_and_consent:
+  destructive_flag: -y / --yes
+  rule: >-
+    Every destructive command is prompt-gated. In a non-interactive run without -y the prompt reads
+    EOF, prints "Cancelled." and exits 2 - nothing happens. This is a fail-safe default, which matters
+    for agent execution.
+  mcp_confirmation: >-
+    On the MCP server the only write tool, ask_simetrik_agent, prompts the client for confirmation
+    before every run; collecting the answer afterwards is a read and does not prompt again.
+  approvals: >-
+    Where a reconciliation requires approval, the agent must request it through the formal approval
+    flow. Approvals are documented as never bypassable, and irreversible deletions always require
+    explicit confirmation.
+dry_run_mode:
+  supported: partial
+  grade: documented
+  description: >-
+    There is no global --dry-run flag. What Simetrik ships instead is a mandatory server-side PREVIEW
+    on the destructive reversal commands: before `recon unreconcile` / `adv-recon unreconcile` /
+    `adv-recon decompensate` confirm anything, the CLI calls a cache-bypassed preview endpoint and, if
+    the target segment holds no eligible records, prints NO_RECORDS_TO_UNRECONCILE and exits 1 without
+    posting. The preview is never skipped by -y. Separately, connections and accounting models carry
+    explicit TEST vs PRODUCTION modes, and `integration test-connection` probes a connection before it
+    is used.
+  caveat: >-
+    The preview guard does NOT run on the `unreconcile --all` path; there the BFF is the only authority
+    and rejects with NOT_FULLY_RECONCILED (422) if the reconciliation is not 100% reconciled.
+reversibility:
+  grade: documented
+  grade_reason: >-
+    Simetrik documents real, first-class reversal operations for its principal write surfaces, with
+    named commands, named endpoints, preconditions and preview guards. What it does NOT publish
+    anywhere is a TIME WINDOW inside which a reversal is possible - no "within N days", no retention
+    period, no cut-off. Under the 0.12.0 rubric that is `documented` (reversal path present) rather
+    than `verified` (reversal path plus a stated window). No window is asserted here because none is
+    stated; inventing one on a financial-reconciliation platform is exactly the error that costs a
+    user real money.
+  read_only: false
+  operations:
+  - write_operation: recon manual - manual reconciliation on a standard reconciliation
+    reversal: recon unreconcile <reconciliation_id>
+    endpoint: POST execution/reconciliation/unreconcile
+    unit: >-
+      A segment (Grupo conciliable / applied filter), or the whole reconciliation with --all. Not a
+      record list - there is no per-record selection.
+    effect: Returns every RECONCILED record inside the segment to the unreconciled state.
+    async: true
+    job_kind: UNRECONCILE
+    window: null
+    window_note: No time limit on unreconciling is stated anywhere in the published docs or skill.
+    preconditions:
+    - >-
+      --all is accepted only when the reconciliation is 100% reconciled; otherwise the BFF rejects
+      with NOT_FULLY_RECONCILED (422).
+    - >-
+      A cache-bypassed preview runs first and blocks with NO_RECORDS_TO_UNRECONCILE (exit 1) if the
+      segment holds no reconciled records. The preview is not skipped by -y.
+    confirmation: Destructive prompt; -y required in non-interactive runs.
+    source: skills/simetrik-cli-operator.md (references/unreconciliation.md)
+  - write_operation: adv-recon manual - manual reconciliation on an advanced reconciliation
+    reversal: adv-recon unreconcile <adv_recon_id>
+    endpoint: POST execution/advanced-reconciliation/unreconcile
+    unit: A segment, or the whole advanced reconciliation with --all.
+    effect: Returns every RECONCILED record inside the segment to the unreconciled state.
+    async: true
+    job_kind: UNRECONCILE
+    window: null
+    confirmation: Destructive prompt; -y required in non-interactive runs.
+    source: skills/simetrik-cli-operator.md (references/unreconciliation.md)
+  - write_operation: >-
+      adv-recon compensate - manual compensation, or compensation applied automatically by a
+      reconciliation's compensation config during a run
+    reversal: adv-recon decompensate <adv_recon_id>
+    endpoint: POST execution/advanced-reconciliation/decompensate
+    unit: >-
+      A segment only. --segment-id is required; unlike unreconcile there is NO --all, so the whole
+      reconciliation cannot be decompensated in one call.
+    effect: Returns every compensated (OFFSET) record inside the segment to uncompensated.
+    async: true
+    job_kind: DECOMPENSATE
+    window: null
+    scope_note: Advanced reconciliations only - there is no simple-recon counterpart.
+    confirmation: Destructive prompt; -y required in non-interactive runs.
+    source: skills/simetrik-cli-operator.md (references/decompensation.md)
+  - write_operation: adv-recon version-create - open a draft version of a confirmed reconciliation
+    reversal: adv-recon version-discard <ADV_RECON_ID> -y
+    effect: >-
+      Drops the open draft version and its edits, leaving the confirmed reconciliation untouched. This
+      is the documented undo for an in-progress configuration change.
+    window: null
+    window_note: >-
+      Bounded by state rather than by time - only one version may be open at a time, and the draft
+      exists until it is confirmed or discarded.
+    confirmation: Destructive; -y is mandatory in JSON output mode.
+    source: skills/simetrik-cli-operator.md (references/advanced-recon.md, error-handling.md)
+  - write_operation: accounting-automation activate <model_id>
+    reversal: accounting-automation deactivate <model_id>
+    effect: Toggles is_active back. Idempotent in both directions; required before deleting an active model.
+    window: null
+    source: https://docs.simetrik.com/cli/reference/accounting-automation/accounting-automation
+  irreversible_or_unstated:
+  - operation: resource / column / folder deletion (simetrik delete, column delete, ...)
+    note: >-
+      Deletions are gated by explicit confirmation - the agent docs say "for irreversible deletions,
+      the agent asks for explicit confirmation before acting" - but no restore, undelete or recycle-bin
+      operation is documented, and no retention window is stated. Treat as irreversible.
+  - operation: >-
+      accounting entries already POSTED to an ERP (accounting-entry, erp-status POSTED)
+    note: >-
+      A CANCELLATION entry type and voidable/pending_discard tags exist in the entry filters, implying
+      a reversal path through the accounting model, but the public docs do not state the conditions or
+      any window. Not asserted here.
+  agent_guidance: >-
+    For an agent planning a write: reconciliation and compensation are reversible by segment with no
+    stated deadline, configuration changes are reversible while the draft version is open, and
+    deletions should be treated as permanent. Every one of these reversals is itself a destructive,
+    prompt-gated, async operation.
+cross_references:
+  errors: errors/simetrik-error-codes.yml
+  lifecycle: lifecycle/simetrik-lifecycle.yml
+  authentication: authentication/simetrik-authentication.yml
+  rate_limits: rate-limits/simetrik-rate-limits.yml
+  mcp: mcp/simetrik-mcp.yml
+  cli: cli/simetrik-cli.yml

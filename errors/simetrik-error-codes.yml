@@ -1,0 +1,130 @@
+generated: '2026-08-27'
+method: searched
+source: >-
+  The provider-published Agent Skill bundle captured in skills/ - specifically its
+  references/error-handling.md "Error reference table" and the per-command exit-code tables published
+  at https://docs.simetrik.com/cli/reference, 2026-08-27.
+format: named-codes
+format_note: >-
+  NOT RFC 9457. Simetrik surfaces named string error codes with a human-readable message, plus a small
+  process exit-code space on the CLI. There is no application/problem+json envelope, no type URI and
+  no error catalog page on the docs site - this catalog is derived from the provider's own published
+  agent-facing error reference, which is the richest error documentation Simetrik ships.
+envelope:
+  transport: CLI stdout/stderr and BFF HTTP responses
+  fields: [code, message]
+  note: >-
+    Several errors are documented as carrying structured detail in the message itself - for example the
+    join column error names the offending column ids per side, and VERSION_ALREADY_OPEN reports the
+    existing open version's id so the caller can act on it without a second lookup.
+exit_codes:
+- code: 0
+  meaning: Success
+- code: 1
+  meaning: >-
+    BFF/API error - the server rejected the request. Also used by a blocking preview
+    (NO_RECORDS_TO_UNRECONCILE) that stops a destructive command before it posts.
+- code: 2
+  meaning: >-
+    Invalid input, or a destructive confirmation prompt that was cancelled or read EOF without a TTY.
+- code: 4
+  meaning: Authentication required - run simetrik login.
+error_count: 11
+errors:
+- code: DUPLICATE_NAME
+  meaning: A resource with that name already exists in the workspace.
+  remediation: Run `resource list --search "<name>"` to find the existing id rather than re-creating.
+  class: conflict
+- code: NOT_FOUND
+  meaning: >-
+    The referenced id does not exist, or an id of the wrong kind was passed (resource_id vs entity_id
+    vs config_id, or a resource_id where an adv-recon id is required).
+  remediation: >-
+    Confirm with `resource describe <id>`. Note the documented inversion - `adv-recon version-create`,
+    `version-discard` and `confirm` take the adv-recon's own id (`adv-recon describe <resource_id>` ->
+    data.id), the opposite of `describe`, which takes the resource_id.
+  class: not-found
+- code: NOT_DRAFT
+  meaning: The reconciliation has already been confirmed and cannot be edited in place.
+  remediation: >-
+    Open a version with changes. Advanced recon: `version-create` -> edit the draft -> `confirm`.
+    Legacy recon: `ruleset create` (lands pending) -> `recon confirm`. Do not retry against the same
+    confirmed object.
+  class: state
+- code: VERSION_REQUIRED
+  meaning: '`adv-recon sweep-create` was called on a confirmed advanced reconciliation.'
+  remediation: >-
+    Run `version-create` first, then create the sweep against the draft. `--new-version` on
+    `sweep-create` does not open a version - it only tags the sweep.
+  class: state
+- code: VERSION_ALREADY_OPEN
+  meaning: A second `adv-recon version-create` was issued while a version with changes is already open.
+  remediation: >-
+    Either keep editing the draft already open, or `version-discard <ADV_RECON_ID> -y` to drop it. The
+    error reports the existing open version's id. Only one open version is allowed at a time.
+  class: conflict
+- code: ALREADY_EDITABLE
+  meaning: '`version-create` was called on an advanced reconciliation that is still a draft.'
+  remediation: Edit the existing draft directly; no version needs to be opened.
+  class: state
+- code: VALIDATION_FAILED
+  meaning: >-
+    A payload or state precondition failed. The documented instance is "Confirmed reconciliation/Sweep
+    <id> cannot be updated/deleted" on `sweep-update` / `sweep-delete` against a confirmed advanced
+    reconciliation.
+  remediation: >-
+    Open a version with changes, apply the edits to the draft sweep ids, then confirm (merge) or
+    discard. The error message itself now appends this recovery path.
+  class: validation
+- code: NO_RECORDS_TO_UNRECONCILE
+  meaning: >-
+    The mandatory pre-flight preview found no reconciled records in the target segment, so the
+    unreconcile was not posted.
+  remediation: >-
+    Check the segment selection. This is a guard, not a fault - it runs cache-bypassed and is never
+    skipped by -y. Exits 1 without posting.
+  class: precondition
+- code: NOT_FULLY_RECONCILED
+  http_status: 422
+  meaning: >-
+    `unreconcile --all` was called on a reconciliation that is not 100% reconciled. The BFF is the
+    authority here; the client-side preview guard does not run on the --all path.
+  remediation: Unreconcile by --segment-id instead, or reconcile the remainder first.
+  class: precondition
+- code: Some columns were not found
+  meaning: >-
+    On `join configuration add`, a clause or --new-columns-* id does not belong to the resource behind
+    that side's segment. The message names the offending ids per side (A: {...}, B: {...}).
+  remediation: >-
+    Resolve the ids with `column list --resource <RESOURCE_ID>` for the segment's resource and resend.
+    The anchor can sit on either side.
+  class: validation
+- code: Name cannot contain special characters
+  meaning: A name contains -, _, . or another non-alphanumeric character.
+  remediation: Strip them - alphanumeric plus spaces only.
+  class: validation
+transient_and_async:
+- condition: '`--wait` returns HTTP 500 on an async command'
+  guidance: >-
+    The single documented exception to "no workarounds on API errors". Do not re-dispatch; poll
+    `resource describe` / `task status` to determine the real state.
+  applies_to: [union confirm --wait, adv-recon confirm --wait, adv-recon execute --wait]
+- condition: '`--wait` times out'
+  guidance: Not a failure - the job is still running. Poll `task status <EVENT_ID>`.
+- condition: Per-process FAILED / ERROR / ERRORED / CANCELLED during a wait
+  guidance: A real failure. The wait aborts.
+- condition: '`export list` intermittent HTTP 500 on some workspaces'
+  guidance: Documented as a known intermittent - retry once before treating it as a real problem.
+- condition: HTTP 429 on `export execute`
+  guidance: >-
+    The workspace's daily manual-execution quota is spent. Wait for the UTC-midnight reset or ask an
+    admin to raise the flag. Check remaining quota with `export daily-quota`.
+universal_rules:
+- Stop on any error; do not execute the next command. Show the full error with phase, resource and payload context.
+- >-
+  Do not invent alternative payloads to bypass a 4xx/5xx. The only exception is the `--wait` 500 case
+  above.
+docs:
+  cli_reference: https://docs.simetrik.com/cli/reference
+  troubleshooting: https://docs.simetrik.com/cli/troubleshooting
+  mcp_troubleshooting: https://docs.simetrik.com/mcp/troubleshooting
