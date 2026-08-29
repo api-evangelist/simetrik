@@ -12,6 +12,17 @@ description: >-
   remote MCP server at https://mcp.us.simetrik.com/mcp that an MCP client connects to with a single URL
   and an OAuth sign-in, with no API key to create or rotate. Customers are concentrated in payments and
   financial services: PSPs, acquirers, issuers, marketplaces, neobanks, banks and retailers.
+deliveryModel:
+  model: saas
+  open_source: false
+  commercial: true
+  callable_host: false
+  label: Hosted service · you call their endpoint
+  confidence: medium
+  source:
+  - pricing
+  generated: '2026-08-28'
+  method: derived
 image: https://simetrik.com/wp-content/uploads/2026/07/cropped-simetrik_logo-192x192.png
 url: https://raw.githubusercontent.com/api-evangelist/simetrik/refs/heads/main/apis.yml
 x-type: company
