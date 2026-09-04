@@ -23,6 +23,22 @@ deliveryModel:
   - pricing
   generated: '2026-08-28'
   method: derived
+accessModel:
+  pricing: unknown
+  onboarding: approval
+  trial: false
+  try_now: false
+  public: false
+  label: Requires approval
+  confidence: medium
+  source:
+  - plans
+  - authentication
+  - scopes
+  - rate-limits
+  - security
+  generated: '2026-09-03'
+  method: derived
 image: https://simetrik.com/wp-content/uploads/2026/07/cropped-simetrik_logo-192x192.png
 url: https://raw.githubusercontent.com/api-evangelist/simetrik/refs/heads/main/apis.yml
 x-type: company
