@@ -3,9 +3,12 @@
   "feeds": [
     {
       "source": "https://simetrik.com/contact-us/",
-      "error": "TimeoutError"
+      "feed_url": "https://simetrik.com/feed/",
+      "title": "",
+      "saved": 2,
+      "method": "discovered"
     }
   ],
-  "post_count": 0,
-  "fetched": "2026-08-30T22:33:40Z"
+  "post_count": 2,
+  "fetched": "2026-09-06T19:17:18Z"
 }
