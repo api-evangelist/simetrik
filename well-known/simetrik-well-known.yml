@@ -1,21 +1,17 @@
-generated: '2026-08-27'
+generated: '2026-09-19'
 method: probed
-source: >-
-  Direct anonymous GETs of /.well-known/* on every Simetrik host named in apis.yml plus the docs,
+source: Direct anonymous GETs of /.well-known/* on every Simetrik host named in apis.yml plus the docs,
   console and CLI-distribution hosts, 2026-08-27.
-notes: >-
-  Two real documents are served, both by the MCP host mcp.us.simetrik.com: an RFC 8414 OAuth 2.0
-  Authorization Server metadata document and an RFC 9728 OAuth 2.0 Protected Resource metadata
-  document. The protected-resource document is NOT at the bare /.well-known/oauth-protected-resource
-  path - it is path-scoped to the MCP resource at /.well-known/oauth-protected-resource/mcp, which is
-  exactly what the 401 challenge from https://mcp.us.simetrik.com/mcp advertises in its
-  WWW-Authenticate header (resource_metadata="https://mcp.us.simetrik.com/.well-known/oauth-protected-resource/mcp").
-  A bare probe of that host misses it, which is why both paths are recorded below.
-  Two hosts answer 200 to every /.well-known/* path with a non-document body and are recorded as
-  misses, not hits: cli.simetrik.com is a single-artifact CDN origin that returns the shell installer
-  script for any path, and app.simetrik.com is a single-page-app catch-all that returns the console
-  HTML shell. simetrik.com (WordPress behind an edge) returns 403 to every /.well-known/* path,
-  including security.txt.
+notes: 'Two real documents are served, both by the MCP host mcp.us.simetrik.com: an RFC 8414 OAuth 2.0
+  Authorization Server metadata document and an RFC 9728 OAuth 2.0 Protected Resource metadata document.
+  The protected-resource document is NOT at the bare /.well-known/oauth-protected-resource path - it is
+  path-scoped to the MCP resource at /.well-known/oauth-protected-resource/mcp, which is exactly what
+  the 401 challenge from https://mcp.us.simetrik.com/mcp advertises in its WWW-Authenticate header (resource_metadata="https://mcp.us.simetrik.com/.well-known/oauth-protected-resource/mcp").
+  A bare probe of that host misses it, which is why both paths are recorded below. Two hosts answer 200
+  to every /.well-known/* path with a non-document body and are recorded as misses, not hits: cli.simetrik.com
+  is a single-artifact CDN origin that returns the shell installer script for any path, and app.simetrik.com
+  is a single-page-app catch-all that returns the console HTML shell. simetrik.com (WordPress behind an
+  edge) returns 403 to every /.well-known/* path, including security.txt.'
 hosts:
 - host: mcp.us.simetrik.com
   documents:
@@ -23,18 +19,15 @@ hosts:
     status: 200
     file: simetrik-oauth-authorization-server.json
     content_type: application/json
-    note: >-
-      RFC 8414. issuer https://mcp.us.simetrik.com/, authorization_code + refresh_token grants,
-      PKCE S256 required, dynamic client registration endpoint present, and
-      client_id_metadata_document_supported true.
+    note: RFC 8414. issuer https://mcp.us.simetrik.com/, authorization_code + refresh_token grants, PKCE
+      S256 required, dynamic client registration endpoint present, and client_id_metadata_document_supported
+      true.
   - path: /.well-known/oauth-protected-resource/mcp
     status: 200
     file: simetrik-oauth-protected-resource.json
     content_type: application/json
-    note: >-
-      RFC 9728. resource https://mcp.us.simetrik.com/mcp, authorization_servers
-      [https://mcp.us.simetrik.com/], scopes_supported [openid, profile, email],
-      bearer_methods_supported [header].
+    note: RFC 9728. resource https://mcp.us.simetrik.com/mcp, authorization_servers [https://mcp.us.simetrik.com/],
+      scopes_supported [openid, profile, email], bearer_methods_supported [header].
   - path: /.well-known/oauth-protected-resource
     status: 404
     note: Bare path is not served; the document is path-scoped to /mcp (see above).
@@ -50,6 +43,15 @@ hosts:
     status: 404
   - path: /.well-known/agent.json
     status: 404
+  - path: /.well-known/oauth-protected-resource
+    status: 200
+    file: simetrik-mcp-oauth-protected-resource.json
+    bytes: 189
+  - path: /.well-known/oauth-authorization-server
+    status: 200
+    file: simetrik-mcp-oauth-authorization-server.json
+    bytes: 568
+  path_echo_control: passed
 - host: simetrik.com
   documents:
   - path: /.well-known/security.txt
@@ -91,9 +93,8 @@ hosts:
   documents:
   - path: /.well-known/security.txt
     status: 200
-    note: >-
-      NOT a document. This host is the CLI distribution origin and returns the same
-      11,971-byte POSIX shell installer script for every path probed. Recorded as a miss.
+    note: NOT a document. This host is the CLI distribution origin and returns the same 11,971-byte POSIX
+      shell installer script for every path probed. Recorded as a miss.
   - path: /.well-known/agent-card.json
     status: 200
     note: Same shell-installer body as above. Not an agent card. Recorded as a miss.
@@ -110,9 +111,8 @@ hosts:
   documents:
   - path: /.well-known/openid-configuration
     status: 200
-    note: >-
-      NOT a document. Single-page-app catch-all returning the 5,902-byte console HTML shell.
-      Recorded as a miss.
+    note: NOT a document. Single-page-app catch-all returning the 5,902-byte console HTML shell. Recorded
+      as a miss.
   - path: /.well-known/oauth-authorization-server
     status: 200
     note: SPA HTML shell. Recorded as a miss.
@@ -130,3 +130,19 @@ hosts:
     note: S3 AccessDenied XML.
 security_txt: null
 agent_card: null
+x-mcp-probe:
+  probed: '2026-09-19'
+  issue: roadmap#321, roadmap#337
+  documents:
+  - host: https://mcp.us.simetrik.com
+    path: /.well-known/oauth-protected-resource
+    file: simetrik-mcp-oauth-protected-resource.json
+  - host: https://mcp.us.simetrik.com
+    path: /.well-known/oauth-authorization-server
+    file: simetrik-mcp-oauth-authorization-server.json
+  validated_on: resource (RFC 9728) / issuer (RFC 8414, OIDC)
+  negative_control: one per host; a 2xx JSON object at an impossible path discards the host
+note: 'MCP-host OAuth discovery added 2026-09-19 (roadmap#321/#337): the harvest visits a provider''s
+  primary hosts, and RFC 9728 protected-resource metadata lives on the MCP host, so these documents existed
+  and were invisible to the scorer. Fetched live and validated on `resource`/`issuer`; one negative control
+  per host.'
